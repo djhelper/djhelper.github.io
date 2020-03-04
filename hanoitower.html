@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Hanoi Tower Game</title>
+  <style>
+  .hanoi-tower {list-style: none; box-sizing: border-box; background-color: #ccc; padding: 30px; margin:20px auto; font-family: arial; font-size: 12px; font-weight: bold; line-height: 20px;}
+  .hanoi-tower td {text-align: center; horizontal-align: center; background-color: #aaa; height: 23px;}
+  .hanoi-tower td.peg {border-top: 5px solid #000; background-color: #000; color: #fff;}
+  .hanoi-tower .disc {height: 20px; width: 100px; background-color: #0cf; border: 1px solid #aaa; border-radius: 5px; display: inline-block; box-shadow: 0 10px 20px #fff inset}
+  label {font-family: arial; font-size: 14px; font-weight: bold; padding: 5px}
+  select {font-family: arial; font-size: 14px; font-weight: bold; padding: 5 10px; width: 100px; text-align: center;}
+  input {font-family: arial; font-size: 14px; font-weight: bold; padding: 5 10px; width: 100px; text-align: center;}
+  .message {font-family: arial; font-size: 14px; font-weight: bold; background-color: #fa0; color: #fff; text-align:center; margin: 10px 100px; padding: 10px;}
+
+  .btnPlay {font-size: 1em; padding: 10px; margin: 10px auto; display: block; cursor: pointer;}
+  .btnReplay:hover {background-color: #555; color: #fff; }
+  </style>
+</head>
+<body>
+  <h3>Hanoi Tower Game</h3>
+  <label>Discs: </label><select class="total-discs"></select>
+  <label>Interval: </label><input class="interval" type="number" min="1" max="1000" value="5">
+  <button class="btnPlay">Play</button>
+  <table class="hanoi-tower" cellspacing=0 cellpadding=1></table>
+  <p class="message">&nbsp;</p>
+
+<script src="https://code.jquery.com/jquery-2.2.4.js"></script>
+<script>
+$(function(){
+  var pegs = ["A", "B", "C"],
+      $hanoitower = $(".hanoi-tower"),
+      $totalDiscs = $(".total-discs"),
+      $play = $(".btnPlay"),
+      $interval = $(".interval"),
+      $message = $(".message"),
+      timer, moves = 0;
+      arr = [];
+
+  for (var i = 1; i <= 20; i++) {
+    $totalDiscs.append("<option>" + i + "</option>");
+  }
+
+  function _init(){
+    var totalDiscs = $totalDiscs.val();
+
+    $hanoitower.empty();
+    $hanoitower.append("<tr><td></td><td></td><td></td></tr>")
+    for (var i=0; i < totalDiscs; i++){
+      $hanoitower.append("<tr><td><span class='disc' style='width: " + (30 + 20*i)+ "px'>" + (i + 1) + "</span></td><td></td><td></td></tr>")
+    }
+    $hanoitower.append("<tr><td class='peg'>A</td><td class='peg'>B</td><td class='peg'>C</td></tr>")
+    $hanoitower.find("td").css({width: (50 + 20*totalDiscs) + "px"});
+  }
+
+  function _play(){
+    var bol = $hanoitower.find("td:first-child .disc").length === 0,
+        peg1 = bol ? "C" : "A",
+        peg2 = bol ? "A" : "C";
+
+    moves = 0;
+    (function moveDisc(n, from, to){
+      if (n >= 2) moveDisc(n - 1, from, otherPeg(from, to));
+      _playMove(n, from, to);
+      if (n >= 2) moveDisc(n - 1, otherPeg(from, to), to);
+    })($totalDiscs.val(), peg1, peg2);
+
+  }
+
+  function _playMove(n, from, to){
+    //console.log("Move disc " + n + " from peg " + from + " to peg " + to + "...");
+    arr.push({disc:n, from:from, to:to})
+  }
+
+  function _showMove(){
+    timer = setInterval(function(){
+      var x = arr.shift();
+      if (x) {
+        var nFrom = pegs.indexOf(x.from),
+            nTo = pegs.indexOf(x.to);
+
+        var disc = $hanoitower.find("td:nth-child(" + (nFrom + 1) + ")").find(".disc").first();
+        var parent = $hanoitower.find("td:nth-child(" + (nTo + 1) + "):empty").last();
+        parent.append(disc);
+        $message.text("Move " + ++ moves + " for disc " + x.disc + " from peg " + x.from + " to peg " + x.to + "...");
+      }
+    }, $interval.val());
+  }
+
+  function otherPeg(peg1, peg2){
+    return pegs.find(function(x){
+      return (x !== peg1 && x !== peg2);
+    });
+  }
+
+  //register events
+  $totalDiscs.on("change", _init);
+  $play.on("click", _play);
+  $interval.on("change", function(){
+    clearInterval(timer);
+    _showMove();
+  })
+
+  //initialization
+  $totalDiscs.val("7").trigger("change");
+  _showMove();
+
+});
+</script>
+</body>
+</html>
